@@ -10,7 +10,7 @@ function uuid() {
 }
 
 function defaultData() {
-  return { version: DB_VER, activeSiteId: null, sites: [], personnel: [], transactions: [], timesheet: [], payments: [] };
+  return { version: DB_VER, activeSiteId: null, sites: [], personnel: [], transactions: [], timesheet: [], payments: [], workItems: [], workItemEntries: [] };
 }
 
 let _db = null;
@@ -20,6 +20,9 @@ function db() {
     try {
       const raw = localStorage.getItem(DB_KEY);
       _db = raw ? JSON.parse(raw) : defaultData();
+      // Backwards compatibility: add new fields if missing
+      if (!_db.workItems) _db.workItems = [];
+      if (!_db.workItemEntries) _db.workItemEntries = [];
     } catch { _db = defaultData(); }
   }
   return _db;
@@ -56,11 +59,13 @@ const Sites = {
     if (i >= 0) { Object.assign(db().sites[i], data); dbSave(); }
   },
   delete(id) {
-    db().sites       = db().sites.filter(s => s.id !== id);
-    db().personnel   = db().personnel.filter(p => p.siteId !== id);
-    db().transactions= db().transactions.filter(t => t.siteId !== id);
-    db().timesheet   = db().timesheet.filter(t => t.siteId !== id);
-    db().payments    = db().payments.filter(p => p.siteId !== id);
+    db().sites           = db().sites.filter(s => s.id !== id);
+    db().personnel       = db().personnel.filter(p => p.siteId !== id);
+    db().transactions    = db().transactions.filter(t => t.siteId !== id);
+    db().timesheet       = db().timesheet.filter(t => t.siteId !== id);
+    db().payments        = db().payments.filter(p => p.siteId !== id);
+    db().workItems       = db().workItems.filter(w => w.siteId !== id);
+    db().workItemEntries = db().workItemEntries.filter(e => e.siteId !== id);
     if (db().activeSiteId === id) db().activeSiteId = db().sites[0]?.id || null;
     dbSave();
   }
@@ -225,5 +230,61 @@ const CATEGORIES = {
 
 const ODEME_YONTEMLERI = ['Nakit', 'Havale/EFT', 'Çek', 'Senet', 'Kredi kartı', 'Diğer'];
 
+const BIRIMLER = ['m²', 'm³', 'm', 'kg', 'ton', 'adet', 'ls (götürü)', 'set', 'takım', 'diğer'];
+
 const TR_MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const TR_DAYS   = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+
+// ─── İş Kalemleri ─────────────────────────────────────────────────────────────
+
+const WorkItems = {
+  all(siteId) { return db().workItems.filter(w => w.siteId === (siteId ?? db().activeSiteId)); },
+  get(id) { return db().workItems.find(w => w.id === id); },
+  add(data) {
+    const w = { id: uuid(), siteId: db().activeSiteId, createdAt: new Date().toISOString(), ...data };
+    db().workItems.push(w);
+    dbSave(); return w;
+  },
+  update(id, data) {
+    const i = db().workItems.findIndex(w => w.id === id);
+    if (i >= 0) { Object.assign(db().workItems[i], data); dbSave(); }
+  },
+  delete(id) {
+    db().workItems       = db().workItems.filter(w => w.id !== id);
+    db().workItemEntries = db().workItemEntries.filter(e => e.workItemId !== id);
+    dbSave();
+  }
+};
+
+const WorkItemEntries = {
+  all(siteId) { return db().workItemEntries.filter(e => e.siteId === (siteId ?? db().activeSiteId)); },
+  forItem(workItemId, siteId) {
+    return db().workItemEntries
+      .filter(e => e.workItemId === workItemId && e.siteId === (siteId ?? db().activeSiteId))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  },
+  get(id) { return db().workItemEntries.find(e => e.id === id); },
+  add(data) {
+    const e = { id: uuid(), siteId: db().activeSiteId, createdAt: new Date().toISOString(), ...data };
+    db().workItemEntries.push(e);
+    dbSave(); return e;
+  },
+  delete(id) {
+    db().workItemEntries = db().workItemEntries.filter(e => e.id !== id);
+    dbSave();
+  }
+};
+
+// Kaleme ait gerçekleşen miktar ve maliyet
+function calcWorkItemProgress(workItemId, siteId) {
+  const item    = WorkItems.get(workItemId);
+  if (!item) return { gercekMiktar: 0, gercekMaliyet: 0, pct: 0 };
+  const entries = WorkItemEntries.forItem(workItemId, siteId);
+  const gercekMiktar  = entries.reduce((s, e) => s + (Number(e.qty) || 0), 0);
+  const unitPrice     = Number(item.unitPrice) || 0;
+  const targetQty     = Number(item.targetQty) || 0;
+  const gercekMaliyet = gercekMiktar * unitPrice;
+  const hedefMaliyet  = targetQty * unitPrice;
+  const pct           = targetQty > 0 ? Math.min(100, Math.round((gercekMiktar / targetQty) * 100)) : null;
+  return { gercekMiktar, gercekMaliyet, hedefMaliyet, pct, targetQty, unitPrice };
+}

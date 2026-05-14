@@ -382,6 +382,35 @@ dialog::backdrop {
 .legend-item { display: flex; align-items: center; gap: .25rem; }
 .legend-box { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
 
+/* ─── İş Kalemleri ───────────────────────────────────────────────────────────── */
+.wi-filter-bar { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.75rem; }
+.wi-filter-btn {
+  padding:.35rem .75rem; border-radius:999px; font-size:.8rem; font-weight:600;
+  border:1.5px solid var(--border); background:white; cursor:pointer; transition:all .15s;
+  color:var(--text-2);
+}
+.wi-filter-btn.active { background:var(--primary); border-color:var(--primary); color:white; }
+.wi-summary-bar { display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; margin-bottom:.75rem; }
+@media(min-width:640px){ .wi-summary-bar { grid-template-columns:repeat(4,1fr); } }
+.wi-summary-item { background:white; border-radius:var(--radius-sm); box-shadow:var(--shadow); padding:.6rem .75rem; }
+.wi-summary-item .wis-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); font-weight:600; }
+.wi-summary-item .wis-val { font-size:.95rem; font-weight:700; margin-top:2px; }
+.wi-card { padding:.85rem 1rem; }
+.wi-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem; margin-bottom:.5rem; }
+.wi-card-info { flex:1; min-width:0; }
+.wi-card-actions { display:flex; gap:.25rem; flex-shrink:0; }
+.wi-name { font-size:.95rem; font-weight:700; }
+.wi-meta { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; margin-top:3px; }
+.wi-progress-row { display:flex; align-items:center; gap:.5rem; margin-bottom:.6rem; }
+.wi-progress-bar-wrap { flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+.wi-progress-bar { height:100%; border-radius:4px; transition:width .4s ease; }
+.wi-pct { font-size:.75rem; font-weight:700; min-width:32px; text-align:right; }
+.wi-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.35rem .5rem; margin-bottom:.6rem; }
+.wi-stat { }
+.wi-stat-label { font-size:.62rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text-3); font-weight:600; }
+.wi-stat-val { font-size:.82rem; font-weight:700; }
+.wi-actions { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.25rem; }
+
 /* ─── Backup section ──────────────────────────────────────────────────────────── */
 .backup-card { max-width: 480px; }
 .backup-actions { display: flex; flex-direction: column; gap: .75rem; }

@@ -12,6 +12,7 @@ const ASSETS = [
   './js/timesheet.js',
   './js/reports.js',
   './js/backup.js',
+  './js/workitems.js',
   './manifest.json',
   './icons/icon-192.svg',
   './icons/icon-512.svg'

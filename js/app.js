@@ -98,9 +98,10 @@ function navigate(id) {
     case 'gelir-gider': AccountingMgr.render(); break;
     case 'personel':   PersonnelMgr.render(); break;
     case 'puantaj':    TimesheetMgr.render(); break;
-    case 'raporlar':   ReportsMgr.render(); break;
-    case 'santiyeler': SitesMgr.render(); break;
-    case 'yedek':      BackupMgr.render(); break;
+    case 'raporlar':    ReportsMgr.render(); break;
+    case 'santiyeler':  SitesMgr.render(); break;
+    case 'yedek':       BackupMgr.render(); break;
+    case 'is-kalemleri': WorkItemsMgr.render(); break;
   }
 }
 

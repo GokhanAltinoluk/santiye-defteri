@@ -39,6 +39,7 @@
   <a href="#" data-section="gelir-gider">₺ Gelir/Gider</a>
   <a href="#" data-section="puantaj">📋 Puantaj</a>
   <a href="#" data-section="personel">👷 Personel</a>
+  <a href="#" data-section="is-kalemleri">📐 İş Kalemleri</a>
   <a href="#" data-section="raporlar">📊 Raporlar</a>
   <a href="#" data-section="santiyeler">🏗️ Şantiyeler</a>
   <a href="#" data-section="yedek">💾 Yedek</a>
@@ -136,6 +137,44 @@
     <div id="timesheet-grid"></div>
   </section>
 
+  <!-- İŞ KALEMLERİ -->
+  <section id="is-kalemleri" class="section">
+    <div class="section-header">
+      <h1>İş Kalemleri</h1>
+      <button class="btn btn-primary btn-sm" onclick="WorkItemsMgr.showModal()">+ Kalem Ekle</button>
+    </div>
+
+    <!-- Özet satırı -->
+    <div class="wi-summary-bar">
+      <div class="wi-summary-item">
+        <div class="wis-label">Toplam Kalem</div>
+        <div class="wis-val" id="wi-kalem-count">—</div>
+      </div>
+      <div class="wi-summary-item">
+        <div class="wis-label">Hedef Maliyet</div>
+        <div class="wis-val" id="wi-hedef-toplam">—</div>
+      </div>
+      <div class="wi-summary-item">
+        <div class="wis-label">Gerçekleşen</div>
+        <div class="wis-val text-success" id="wi-gercek-toplam">—</div>
+      </div>
+      <div class="wi-summary-item">
+        <div class="wis-label">Kalan Maliyet</div>
+        <div class="wis-val text-danger" id="wi-kalan-toplam">—</div>
+      </div>
+    </div>
+
+    <!-- Filtreler -->
+    <div class="wi-filter-bar">
+      <button class="wi-filter-btn active" data-wt="" onclick="WorkItemsMgr.setFilter('')">Tümü</button>
+      <button class="wi-filter-btn" data-wt="kaba" onclick="WorkItemsMgr.setFilter('kaba')">🧱 Kaba İş</button>
+      <button class="wi-filter-btn" data-wt="ince" onclick="WorkItemsMgr.setFilter('ince')">🔧 İnce İş</button>
+      <button class="wi-filter-btn" data-wt="genel" onclick="WorkItemsMgr.setFilter('genel')">📦 Genel</button>
+    </div>
+
+    <div id="workitems-list"></div>
+  </section>
+
   <!-- RAPORLAR -->
   <section id="raporlar" class="section">
     <div class="section-header">
@@ -226,6 +265,10 @@
   position:fixed; bottom:calc(var(--bot-nav-h) + 8px); right:8px; z-index:200;
   background:white; border-radius:var(--radius); box-shadow:var(--shadow-lg);
   overflow:hidden; min-width:165px; border:1px solid var(--border);">
+  <a href="#" class="nav-more-item" data-section="is-kalemleri"
+    style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;color:var(--text);font-size:.9rem;font-weight:500;border-bottom:1px solid var(--border)">
+    <span>📐</span> İş Kalemleri
+  </a>
   <a href="#" class="nav-more-item" data-section="raporlar"
     style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;color:var(--text);font-size:.9rem;font-weight:500;border-bottom:1px solid var(--border)">
     <span>📊</span> Raporlar
@@ -486,6 +529,110 @@
   </div>
 </dialog>
 
+<!-- İş Kalemi Ekle/Düzenle Modal -->
+<dialog id="modal-wi">
+  <div class="modal-header">
+    <h2 id="modal-wi-title">Yeni İş Kalemi</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-wi').close()">✕</button>
+  </div>
+  <form id="form-wi" class="modal-body" onsubmit="WorkItemsMgr.save(event)">
+    <div class="form-group">
+      <label class="form-label">Kalem Adı *</label>
+      <input name="wi-name" type="text" class="form-control" placeholder="ör: Beton C25 Döküm, Tuğla Duvar" required autocomplete="off">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">İş Türü</label>
+        <select name="wi-worktype" class="form-control">
+          <option value="kaba">Kaba İş</option>
+          <option value="ince">İnce İş</option>
+          <option value="genel">Genel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Birim</label>
+        <select name="wi-unit" class="form-control" onchange="WorkItemsMgr._toggleCustomUnit(this.value)">
+          <option value="m²">m² (metrekare)</option>
+          <option value="m³">m³ (metreküp)</option>
+          <option value="m">m (metre)</option>
+          <option value="kg">kg</option>
+          <option value="ton">ton</option>
+          <option value="adet">adet</option>
+          <option value="ls (götürü)">ls (götürü)</option>
+          <option value="set">set</option>
+          <option value="diğer">Diğer...</option>
+        </select>
+      </div>
+    </div>
+    <div id="wi-unit-custom-wrap" class="form-group" style="display:none">
+      <label class="form-label">Özel Birim</label>
+      <input name="wi-unit-custom" type="text" class="form-control" placeholder="ör: taş, pano, paket">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Birim Fiyat (₺)</label>
+        <input name="wi-unit-price" type="number" min="0" step="0.01" class="form-control" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hedef Miktar</label>
+        <input name="wi-target-qty" type="number" min="0" step="0.01" class="form-control" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notlar</label>
+      <input name="wi-notes" type="text" class="form-control" placeholder="Teknik detay, poz no, sözleşme notu" autocomplete="off">
+    </div>
+  </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-wi').close()">İptal</button>
+    <button type="submit" form="form-wi" class="btn btn-primary">Kaydet</button>
+  </div>
+</dialog>
+
+<!-- İş Girişi Ekle Modal -->
+<dialog id="modal-wi-entry">
+  <div class="modal-header">
+    <h2 id="modal-wi-entry-title">Giriş Ekle</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-wi-entry').close()">✕</button>
+  </div>
+  <form id="form-wi-entry" class="modal-body" onsubmit="WorkItemsMgr.saveEntry(event)">
+    <input type="hidden" name="wie-item-id">
+    <p id="wie-remaining" class="text-sm text-secondary" style="margin-bottom:.75rem;padding:.5rem;background:var(--bg);border-radius:var(--radius-xs)"></p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tarih *</label>
+        <input name="wie-date" type="date" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Miktar (<span id="wie-unit-label">birim</span>) *</label>
+        <input name="wie-qty" type="number" min="0.001" step="0.001" class="form-control" placeholder="0" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Not</label>
+      <input name="wie-notes" type="text" class="form-control" placeholder="ör: A Blok 3. kat döküm" autocomplete="off">
+    </div>
+  </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-wi-entry').close()">İptal</button>
+    <button type="submit" form="form-wi-entry" class="btn btn-primary">Kaydet</button>
+  </div>
+</dialog>
+
+<!-- İş Kalemi Detay Modal -->
+<dialog id="modal-wi-detail">
+  <div class="modal-header">
+    <h2 id="wi-detail-title">Giriş Geçmişi</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-wi-detail').close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div id="wi-detail-list"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-wi-detail').close()">Kapat</button>
+  </div>
+</dialog>
+
 <!-- Onay Modal -->
 <dialog id="modal-confirm">
   <div class="modal-header">
@@ -510,6 +657,7 @@
 <script src="js/timesheet.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/backup.js"></script>
+<script src="js/workitems.js"></script>
 
 </body>
 </html>
