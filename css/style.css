@@ -447,6 +447,29 @@ dialog::backdrop {
 .site-addr { font-size: .8rem; color: var(--text-2); }
 .site-meta { font-size: .75rem; color: var(--text-3); }
 
+/* ─── Katalog Modal ─────────────────────────────────────────────────────────────── */
+.katalog-dialog { max-width: 540px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column; padding: 0; }
+.katalog-dialog .modal-header { flex-shrink: 0; }
+.katalog-controls { flex-shrink: 0; padding: .75rem 1rem; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: .5rem; }
+.katalog-filter-pills { display: flex; gap: .35rem; flex-wrap: wrap; }
+.katalog-pill { padding: .25rem .75rem; border-radius: 99px; border: 1px solid var(--border); background: var(--bg); font-size: .8rem; cursor: pointer; font-weight: 500; transition: background .15s, color .15s; }
+.katalog-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+.katalog-body { flex: 1; overflow-y: auto; padding: .5rem 1rem; }
+.katalog-footer { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; border-top: 1px solid var(--border); gap: .5rem; }
+.katalog-count { font-size: .85rem; font-weight: 600; color: var(--primary); }
+.katalog-group { margin-bottom: .75rem; }
+.katalog-group-header { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 700; color: var(--text-2); padding: .3rem 0; border-bottom: 1px solid var(--border); margin-bottom: .25rem; text-transform: uppercase; letter-spacing: .03em; }
+.katalog-group-badge { display: inline-block; font-size: .7rem; padding: .1rem .45rem; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.katalog-badge-kaba { background: #fef3c7; color: #92400e; }
+.katalog-badge-ince { background: #dbeafe; color: #1e40af; }
+.katalog-badge-genel { background: #f3f4f6; color: #374151; }
+.katalog-item { display: flex; align-items: center; gap: .6rem; padding: .35rem .25rem; border-radius: 6px; cursor: pointer; transition: background .12s; }
+.katalog-item:hover { background: var(--bg); }
+.katalog-cb { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+.katalog-item-name { flex: 1; font-size: .875rem; }
+.katalog-item-unit { font-size: .75rem; color: var(--text-3); background: var(--bg); padding: .1rem .4rem; border-radius: 4px; flex-shrink: 0; }
+.katalog-empty { text-align: center; color: var(--text-3); padding: 2rem 0; font-size: .9rem; }
+
 /* ─── Desktop (≥768px) ────────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
   body { padding-bottom: var(--tabnav-h); }

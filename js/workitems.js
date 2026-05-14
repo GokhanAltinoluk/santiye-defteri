@@ -286,11 +286,92 @@ const WorkItemsMgr = {
     if (!ok) return;
     WorkItemEntries.delete(id);
     showToast('Giriş silindi', 'danger');
-    // Refresh detail modal
     if (this._detailItemId) {
       const w = WorkItems.get(this._detailItemId);
       if (w) this._renderDetailList(w, WorkItemEntries.forItem(this._detailItemId));
     }
     this.render();
+  },
+
+  // ── Katalog Modal ─────────────────────────────────────────────────────────────
+
+  _katalogFilter: '',
+
+  showKatalogModal() {
+    document.getElementById('katalog-search').value = '';
+    this._katalogFilter = '';
+    document.querySelectorAll('.katalog-pill').forEach(p => p.classList.toggle('active', p.dataset.wt === ''));
+    this.renderKatalog();
+    document.getElementById('modal-katalog').showModal();
+  },
+
+  _setKatalogFilter(wt) {
+    this._katalogFilter = wt;
+    document.querySelectorAll('.katalog-pill').forEach(p => p.classList.toggle('active', p.dataset.wt === wt));
+    this.renderKatalog();
+  },
+
+  renderKatalog() {
+    const q   = (document.getElementById('katalog-search').value || '').toLowerCase().trim();
+    const wt  = this._katalogFilter;
+    const el  = document.getElementById('katalog-list');
+    const wtLabel = { kaba: 'Kaba İş', ince: 'İnce İş', genel: 'Genel' };
+
+    let html = '';
+    let anyVisible = false;
+
+    for (const cat of KATALOG) {
+      if (wt && cat.workType !== wt) continue;
+      const filtered = cat.kalemler.filter(k => !q || k.ad.toLowerCase().includes(q));
+      if (!filtered.length) continue;
+      anyVisible = true;
+
+      html += `<div class="katalog-group">
+        <div class="katalog-group-header">
+          <span class="katalog-group-badge katalog-badge-${cat.workType}">${wtLabel[cat.workType] || cat.workType}</span>
+          ${escHtml(cat.baslik)}
+        </div>
+        ${filtered.map(k => {
+          const cbId = `kat-${cat.id}-${k.ad.replace(/\s+/g, '-')}`;
+          return `<label class="katalog-item" for="${escHtml(cbId)}">
+            <input type="checkbox" id="${escHtml(cbId)}" class="katalog-cb"
+              data-name="${escHtml(k.ad)}" data-unit="${escHtml(k.birim)}" data-wt="${escHtml(cat.workType)}"
+              onchange="WorkItemsMgr._updateKatalogCount()">
+            <span class="katalog-item-name">${escHtml(k.ad)}</span>
+            <span class="katalog-item-unit">${escHtml(k.birim)}</span>
+          </label>`;
+        }).join('')}
+      </div>`;
+    }
+
+    el.innerHTML = anyVisible ? html : '<p class="katalog-empty">Eşleşen kalem bulunamadı.</p>';
+    this._updateKatalogCount();
+  },
+
+  _updateKatalogCount() {
+    const n = document.querySelectorAll('.katalog-cb:checked').length;
+    document.getElementById('katalog-selected-count').textContent = n ? `${n} kalem seçildi` : '0 kalem seçildi';
+  },
+
+  addFromKatalog() {
+    const checked = document.querySelectorAll('.katalog-cb:checked');
+    if (!checked.length) { showToast('En az bir kalem seçin', 'danger'); return; }
+
+    const existingNames = new Set(WorkItems.all().map(w => w.name.toLowerCase()));
+    let added = 0, skipped = 0;
+
+    checked.forEach(cb => {
+      const name = cb.dataset.name;
+      if (existingNames.has(name.toLowerCase())) { skipped++; return; }
+      WorkItems.add({ name, workType: cb.dataset.wt, unit: cb.dataset.unit, unitPrice: 0, targetQty: 0, notes: '' });
+      added++;
+    });
+
+    document.getElementById('modal-katalog').close();
+    this.render();
+
+    if (added && skipped) showToast(`${added} kalem eklendi, ${skipped} zaten mevcut atlandı`, 'success');
+    else if (added)       showToast(`${added} kalem eklendi`, 'success');
+    else                  showToast('Seçilen kalemler zaten mevcut', 'danger');
   }
 };

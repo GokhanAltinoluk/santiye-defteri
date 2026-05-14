@@ -141,7 +141,10 @@
   <section id="is-kalemleri" class="section">
     <div class="section-header">
       <h1>İş Kalemleri</h1>
-      <button class="btn btn-primary btn-sm" onclick="WorkItemsMgr.showModal()">+ Kalem Ekle</button>
+      <div style="display:flex;gap:.4rem">
+        <button class="btn btn-outline btn-sm" onclick="WorkItemsMgr.showKatalogModal()">📋 Katalogdan Ekle</button>
+        <button class="btn btn-primary btn-sm" onclick="WorkItemsMgr.showModal()">+ Kalem Ekle</button>
+      </div>
     </div>
 
     <!-- Özet satırı -->
@@ -630,6 +633,31 @@
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-wi-detail').close()">Kapat</button>
+  </div>
+</dialog>
+
+<!-- Katalog Seçim Modal -->
+<dialog id="modal-katalog" class="katalog-dialog">
+  <div class="modal-header">
+    <h2>📋 Katalogdan İş Kalemi Ekle</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-katalog').close()">✕</button>
+  </div>
+  <div class="katalog-controls">
+    <input id="katalog-search" type="search" class="form-control" placeholder="Kalem adı ara..." oninput="WorkItemsMgr.renderKatalog()">
+    <div class="katalog-filter-pills">
+      <button class="katalog-pill active" data-wt="" onclick="WorkItemsMgr._setKatalogFilter('')">Tümü</button>
+      <button class="katalog-pill" data-wt="kaba" onclick="WorkItemsMgr._setKatalogFilter('kaba')">🧱 Kaba</button>
+      <button class="katalog-pill" data-wt="ince" onclick="WorkItemsMgr._setKatalogFilter('ince')">🔧 İnce</button>
+      <button class="katalog-pill" data-wt="genel" onclick="WorkItemsMgr._setKatalogFilter('genel')">📦 Genel</button>
+    </div>
+  </div>
+  <div class="katalog-body" id="katalog-list"></div>
+  <div class="katalog-footer">
+    <span id="katalog-selected-count" class="katalog-count">0 kalem seçildi</span>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-katalog').close()">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="WorkItemsMgr.addFromKatalog()">Seçilenleri Ekle</button>
+    </div>
   </div>
 </dialog>
 
