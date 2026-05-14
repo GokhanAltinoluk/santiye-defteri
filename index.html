@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="Şantiye gelir-gider muhasebesi ve personel puantaj yönetimi">
+  <meta name="theme-color" content="#f59e0b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Şantiye">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Şantiye Defteri</title>
+</head>
+<body>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ─── App Header ─────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-brand">
+    <span class="header-brand-icon">🏗️</span>
+    <span class="header-brand-name">Şantiye Defteri</span>
+  </div>
+  <div class="header-right">
+    <select id="site-selector"></select>
+    <button id="btn-new-site" class="btn btn-icon"
+      style="background:rgba(255,255,255,.25);color:white;border:1px solid rgba(255,255,255,.4);font-size:1.1rem"
+      title="Yeni Şantiye Ekle">+</button>
+  </div>
+</header>
+
+<!-- ─── Desktop Top Nav ────────────────────────────────────────────────────── -->
+<nav class="top-nav">
+  <a href="#" data-section="panel">⊞ Panel</a>
+  <a href="#" data-section="gelir-gider">₺ Gelir/Gider</a>
+  <a href="#" data-section="puantaj">📋 Puantaj</a>
+  <a href="#" data-section="personel">👷 Personel</a>
+  <a href="#" data-section="raporlar">📊 Raporlar</a>
+  <a href="#" data-section="santiyeler">🏗️ Şantiyeler</a>
+  <a href="#" data-section="yedek">💾 Yedek</a>
+</nav>
+
+<!-- ─── Main Content ───────────────────────────────────────────────────────── -->
+<main class="app-main">
+
+  <!-- PANEL -->
+  <section id="panel" class="section">
+    <div class="section-header">
+      <h1>Genel Bakış</h1>
+      <button class="btn btn-primary btn-sm" onclick="navigate('gelir-gider');AccountingMgr.showModal()">+ Kayıt Ekle</button>
+    </div>
+    <div id="panel-cards"></div>
+    <div class="card" id="panel-recent"></div>
+    <div class="card" id="panel-hakedis" style="display:none"></div>
+  </section>
+
+  <!-- GELIR/GIDER -->
+  <section id="gelir-gider" class="section">
+    <div class="section-header">
+      <h1>Gelir / Gider</h1>
+      <button class="btn btn-primary btn-sm" onclick="AccountingMgr.showModal()">+ Kayıt Ekle</button>
+    </div>
+
+    <div class="filters-bar">
+      <div class="form-group">
+        <label class="form-label">Tür</label>
+        <select id="filter-type" class="form-control" onchange="AccountingMgr.applyFilters()">
+          <option value="">Tümü</option>
+          <option value="gelir">Gelir</option>
+          <option value="gider">Gider</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">İş Türü</label>
+        <select id="filter-worktype" class="form-control" onchange="AccountingMgr.applyFilters()">
+          <option value="">Tümü</option>
+          <option value="kaba">Kaba İş</option>
+          <option value="ince">İnce İş</option>
+          <option value="genel">Genel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Başlangıç</label>
+        <input id="filter-date-from" type="date" class="form-control" onchange="AccountingMgr.applyFilters()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bitiş</label>
+        <input id="filter-date-to" type="date" class="form-control" onchange="AccountingMgr.applyFilters()">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="AccountingMgr.clearFilters()">✕ Temizle</button>
+      </div>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item">
+        <div class="s-label">Gelir</div>
+        <div class="s-value text-success" id="acc-gelir">—</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">Gider</div>
+        <div class="s-value text-danger" id="acc-gider">—</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">Bakiye</div>
+        <div class="s-value" id="acc-bakiye">—</div>
+      </div>
+    </div>
+
+    <div id="tx-list"></div>
+  </section>
+
+  <!-- PERSONEL -->
+  <section id="personel" class="section">
+    <div class="section-header">
+      <h1>Personel</h1>
+      <button class="btn btn-primary btn-sm" onclick="PersonnelMgr.showModal()">+ Personel Ekle</button>
+    </div>
+    <div id="personnel-list"></div>
+  </section>
+
+  <!-- PUANTAJ -->
+  <section id="puantaj" class="section">
+    <div class="puantaj-header">
+      <h1>Puantaj</h1>
+      <div class="month-nav">
+        <button onclick="TimesheetMgr.prevMonth()">‹</button>
+        <span class="month-nav-label" id="ts-month-label"></span>
+        <button onclick="TimesheetMgr.nextMonth()">›</button>
+      </div>
+    </div>
+    <div id="timesheet-grid"></div>
+  </section>
+
+  <!-- RAPORLAR -->
+  <section id="raporlar" class="section">
+    <div class="section-header">
+      <h1>Raporlar</h1>
+    </div>
+    <div class="report-controls">
+      <div class="month-nav">
+        <button onclick="ReportsMgr.prevMonth()">‹</button>
+        <span class="month-nav-label" id="rep-month-label"></span>
+        <button onclick="ReportsMgr.nextMonth()">›</button>
+      </div>
+    </div>
+    <div id="report-content"></div>
+  </section>
+
+  <!-- SANTIYELER -->
+  <section id="santiyeler" class="section">
+    <div class="section-header">
+      <h1>Şantiyeler</h1>
+      <button class="btn btn-primary btn-sm" onclick="SitesMgr.showModal()">+ Yeni Şantiye</button>
+    </div>
+    <div id="sites-list"></div>
+  </section>
+
+  <!-- YEDEK -->
+  <section id="yedek" class="section">
+    <div class="section-header"><h1>Yedekleme</h1></div>
+    <div class="card backup-card">
+      <div class="backup-note" style="margin-bottom:1.25rem">
+        ℹ️ Verileriniz yalnızca bu cihazın tarayıcısında saklanır. Cihazı değiştirdiğinizde veya tarayıcı verilerini temizlediğinizde kaybolur.
+        Düzenli aralıklarla JSON yedek alıp Google Drive'a veya e-postanıza gönderin.
+      </div>
+      <div class="backup-actions">
+        <div>
+          <h3 style="margin-bottom:.35rem">📥 JSON Yedek Al</h3>
+          <p class="text-sm text-secondary" style="margin-bottom:.65rem">Tüm şantiye, personel, puantaj ve muhasebe verilerini tek dosyada indirir.</p>
+          <button class="btn btn-primary" onclick="BackupMgr.download()">💾 Yedek İndir</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <h3 style="margin-bottom:.35rem">📂 Yedek Yükle</h3>
+          <p class="text-sm text-secondary" style="margin-bottom:.65rem">Daha önce indirdiğiniz JSON yedek dosyasını seçin. <strong>Mevcut tüm veriler değiştirilir.</strong></p>
+          <button class="btn btn-outline" onclick="BackupMgr.triggerImport()">Dosya Seç ve Yükle</button>
+          <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="BackupMgr.handleImport(event)">
+        </div>
+
+        <div class="divider"></div>
+
+        <div>
+          <h3 style="margin-bottom:.35rem;color:var(--danger)">🗑️ Tüm Verileri Sil</h3>
+          <p class="text-sm text-secondary" style="margin-bottom:.65rem">Tüm şantiye ve kayıtlar kalıcı olarak silinir. Önce mutlaka yedek alın!</p>
+          <button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger)" onclick="BackupMgr.clearAll()">Verileri Temizle</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ─── Bottom Navigation ────────────────────────────────────────────────────── -->
+<nav class="bottom-nav">
+  <button class="nav-item" data-section="panel">
+    <span class="nav-icon">⊞</span>
+    <span class="nav-label">Panel</span>
+  </button>
+  <button class="nav-item" data-section="puantaj">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">Puantaj</span>
+  </button>
+  <button class="nav-item" data-section="gelir-gider">
+    <span class="nav-icon">₺</span>
+    <span class="nav-label">Muhasebe</span>
+  </button>
+  <button class="nav-item" data-section="personel">
+    <span class="nav-icon">👷</span>
+    <span class="nav-label">Personel</span>
+  </button>
+  <button class="nav-item" id="nav-more-btn">
+    <span class="nav-icon">⋯</span>
+    <span class="nav-label">Daha Fazla</span>
+  </button>
+</nav>
+
+<!-- More Menu popup -->
+<div id="more-menu" class="hidden" style="
+  position:fixed; bottom:calc(var(--bot-nav-h) + 8px); right:8px; z-index:200;
+  background:white; border-radius:var(--radius); box-shadow:var(--shadow-lg);
+  overflow:hidden; min-width:165px; border:1px solid var(--border);">
+  <a href="#" class="nav-more-item" data-section="raporlar"
+    style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;color:var(--text);font-size:.9rem;font-weight:500;border-bottom:1px solid var(--border)">
+    <span>📊</span> Raporlar
+  </a>
+  <a href="#" class="nav-more-item" data-section="santiyeler"
+    style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;color:var(--text);font-size:.9rem;font-weight:500;border-bottom:1px solid var(--border)">
+    <span>🏗️</span> Şantiyeler
+  </a>
+  <a href="#" class="nav-more-item" data-section="yedek"
+    style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;color:var(--text);font-size:.9rem;font-weight:500">
+    <span>💾</span> Yedekleme
+  </a>
+</div>
+
+<!-- ═══════════════════════ MODALS ═══════════════════════════════════════════ -->
+
+<!-- Şantiye Modal -->
+<dialog id="modal-site">
+  <div class="modal-header">
+    <h2 id="modal-site-title">Yeni Şantiye</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-site').close()">✕</button>
+  </div>
+  <form id="form-site" class="modal-body" onsubmit="SitesMgr.save(event)">
+    <div class="form-group">
+      <label class="form-label">Şantiye / Proje Adı *</label>
+      <input name="site-name" type="text" class="form-control" placeholder="ör: Merkez Apartman A Blok" required autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Adres / Konum</label>
+      <input name="site-address" type="text" class="form-control" placeholder="Semt, ilçe veya tam adres" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Başlangıç Tarihi</label>
+      <input name="site-start" type="date" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notlar</label>
+      <textarea name="site-notes" class="form-control" placeholder="İlave bilgiler (isteğe bağlı)"></textarea>
+    </div>
+  </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-site').close()">İptal</button>
+    <button type="submit" form="form-site" class="btn btn-primary">Kaydet</button>
+  </div>
+</dialog>
+
+<!-- Gelir/Gider Modal -->
+<dialog id="modal-tx">
+  <div class="modal-header">
+    <h2 id="modal-tx-title">Yeni Kayıt</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-tx').close()">✕</button>
+  </div>
+  <form id="form-tx" class="modal-body" onsubmit="AccountingMgr.save(event)">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tür *</label>
+        <select name="tx-type" id="tx-type" class="form-control" onchange="AccountingMgr.onTypeChange()">
+          <option value="gider">Gider</option>
+          <option value="gelir">Gelir</option>
+        </select>
+      </div>
+      <div class="form-group" id="tx-worktype-wrap">
+        <label class="form-label">İş Türü</label>
+        <select name="tx-worktype" id="tx-worktype" class="form-control" onchange="AccountingMgr.onWorkTypeChange()">
+          <option value="kaba">Kaba İş</option>
+          <option value="ince">İnce İş</option>
+          <option value="genel">Genel</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kategori</label>
+      <select name="tx-category" id="tx-category" class="form-control">
+        <option value="">Seçin (isteğe bağlı)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tarih *</label>
+        <input name="tx-date" type="date" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tutar (₺) *</label>
+        <input name="tx-amount" id="tx-amount" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Açıklama</label>
+      <input name="tx-description" type="text" class="form-control" placeholder="Kısa açıklama" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ödeme Yöntemi</label>
+      <select name="tx-payment" class="form-control">
+        <option value="">Seçin (isteğe bağlı)</option>
+        <option>Nakit</option>
+        <option>Havale/EFT</option>
+        <option>Çek</option>
+        <option>Senet</option>
+        <option>Kredi kartı</option>
+        <option>Diğer</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notlar</label>
+      <textarea name="tx-notes" class="form-control" rows="2" placeholder="Ek notlar (isteğe bağlı)"></textarea>
+    </div>
+  </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-tx').close()">İptal</button>
+    <button type="submit" form="form-tx" class="btn btn-primary">Kaydet</button>
+  </div>
+</dialog>
+
+<!-- Personel Modal -->
+<dialog id="modal-personnel">
+  <div class="modal-header">
+    <h2 id="modal-personnel-title">Personel Ekle</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-personnel').close()">✕</button>
+  </div>
+  <form id="form-personnel" class="modal-body" onsubmit="PersonnelMgr.save(event)">
+    <div class="form-group">
+      <label class="form-label">Ad Soyad *</label>
+      <input name="p-name" type="text" class="form-control" placeholder="ör: Mehmet Yılmaz" required autocomplete="off">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Görev / Meslek</label>
+        <input name="p-role" type="text" class="form-control" placeholder="ör: Duvarcı, Elektrikçi" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon</label>
+        <input name="p-phone" type="tel" class="form-control" placeholder="05xx xxx xx xx">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ücret Türü *</label>
+      <select name="p-wagetype" id="p-wagetype" class="form-control" onchange="PersonnelMgr.onWageTypeChange()">
+        <option value="gunluk">Günlük (Yevmiye)</option>
+        <option value="saatlik">Saatlik</option>
+      </select>
+    </div>
+    <div id="daily-rate-wrap" class="form-group">
+      <label class="form-label">Günlük Yevmiye (₺)</label>
+      <input name="p-dailyrate" type="number" min="0" step="0.01" class="form-control" placeholder="ör: 1500">
+    </div>
+    <div id="hourly-rate-wrap" class="form-group" style="display:none">
+      <label class="form-label">Saatlik Ücret (₺)</label>
+      <input name="p-hourlyrate" type="number" min="0" step="0.01" class="form-control" placeholder="ör: 200">
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:.6rem;margin-top:.25rem">
+      <input name="p-active" id="p-active" type="checkbox" style="width:18px;height:18px;cursor:pointer;accent-color:var(--primary)" checked>
+      <label for="p-active" class="form-label" style="margin:0;cursor:pointer">Aktif personel (puantajda görünsün)</label>
+    </div>
+  </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-personnel').close()">İptal</button>
+    <button type="submit" form="form-personnel" class="btn btn-primary">Kaydet</button>
+  </div>
+</dialog>
+
+<!-- Puantaj Giriş Modal -->
+<dialog id="modal-ts-entry">
+  <div class="modal-header">
+    <h2 id="modal-ts-title">Puantaj Girişi</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-ts-entry').close()">✕</button>
+  </div>
+  <form id="form-ts-entry" class="modal-body" onsubmit="TimesheetMgr.saveEntry(event)">
+    <input type="hidden" name="ts-personnel-id">
+    <input type="hidden" name="ts-date">
+
+    <!-- Günlük alanlar -->
+    <div id="ts-gunluk-fields">
+      <div class="form-group">
+        <label class="form-label">Çalışma Miktarı</label>
+        <select name="ts-dayvalue" class="form-control">
+          <option value="1">Tam gün (1 yevmiye)</option>
+          <option value="0.5">Yarım gün (0.5 yevmiye)</option>
+          <option value="1.5">1.5 gün</option>
+          <option value="2">2 gün</option>
+          <option value="0">Gelmedi (0)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fazla Mesai (saat)</label>
+        <input name="ts-overtime" type="number" min="0" step="0.5" max="12" class="form-control" placeholder="0">
+        <div class="form-hint">Mesai saatleri 1.5× ücretle hakediş hesabına eklenir</div>
+      </div>
+    </div>
+
+    <!-- Saatlik alanlar -->
+    <div id="ts-saatlik-fields" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Çalışılan Saat</label>
+        <input name="ts-hours" type="number" min="0" step="0.5" max="24" class="form-control" placeholder="ör: 8">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fazla Mesai (saat)</label>
+        <input name="ts-overtime-h" type="number" min="0" step="0.5" max="12" class="form-control" placeholder="0">
+        <div class="form-hint">Mesai saatleri 1.5× ücretle hesaplanır</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Not (isteğe bağlı)</label>
+      <input name="ts-notes" type="text" class="form-control" placeholder="ör: Yarım gün izin, doktor" autocomplete="off">
+    </div>
+  </form>
+  <div class="modal-footer" style="justify-content:space-between">
+    <button type="button" class="btn btn-ghost" id="ts-delete-btn" style="color:var(--danger);display:none">🗑️ Sil</button>
+    <div style="display:flex;gap:.5rem">
+      <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-ts-entry').close()">İptal</button>
+      <button type="submit" form="form-ts-entry" class="btn btn-primary">Kaydet</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Personel Ödeme Modal -->
+<dialog id="modal-payment">
+  <div class="modal-header">
+    <h2 id="modal-payment-title">Ödeme Kaydet</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-payment').close()">✕</button>
+  </div>
+  <form id="form-payment" class="modal-body" onsubmit="PersonnelMgr.savePayment(event)">
+    <input type="hidden" name="pay-personnel-id">
+    <p id="pay-remaining" class="text-sm text-secondary" style="margin-bottom:.75rem;padding:.5rem;background:var(--bg);border-radius:var(--radius-xs)"></p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tarih *</label>
+        <input name="pay-date" type="date" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tutar (₺) *</label>
+        <input name="pay-amount" type="number" min="0.01" step="0.01" class="form-control" placeholder="0.00" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ödeme Notu</label>
+      <input name="pay-notes" type="text" class="form-control" placeholder="ör: Haftalık avans" autocomplete="off">
+    </div>
+  </form>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-payment').close()">İptal</button>
+    <button type="submit" form="form-payment" class="btn btn-primary">Kaydet</button>
+  </div>
+</dialog>
+
+<!-- Ödeme Geçmişi Modal -->
+<dialog id="modal-pay-history">
+  <div class="modal-header">
+    <h2 id="pay-history-title">Ödeme Geçmişi</h2>
+    <button class="modal-close" onclick="document.getElementById('modal-pay-history').close()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div id="pay-history-list"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal-pay-history').close()">Kapat</button>
+  </div>
+</dialog>
+
+<!-- Onay Modal -->
+<dialog id="modal-confirm">
+  <div class="modal-header">
+    <h2>⚠️ Onay Gerekli</h2>
+  </div>
+  <div class="modal-body">
+    <p id="confirm-message" style="line-height:1.65;white-space:pre-line;color:var(--text-2)"></p>
+  </div>
+  <div class="modal-footer">
+    <button id="confirm-cancel" class="btn btn-ghost">Vazgeç</button>
+    <button id="confirm-ok" class="btn btn-danger">Sil</button>
+  </div>
+</dialog>
+
+<!-- ─── Scripts ────────────────────────────────────────────────────────────── -->
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+<script src="js/panel.js"></script>
+<script src="js/sites.js"></script>
+<script src="js/accounting.js"></script>
+<script src="js/personnel.js"></script>
+<script src="js/timesheet.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/backup.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#f59e0b"/>
+  <!-- Hard hat dome -->
+  <path d="M100 314 C100 182 412 182 412 314" fill="white"/>
+  <!-- Hard hat brim -->
+  <rect x="58" y="314" width="396" height="48" rx="24" fill="white"/>
+  <!-- Center rib -->
+  <rect x="238" y="210" width="36" height="104" fill="#f59e0b" rx="8"/>
+  <!-- Chin strap dots -->
+  <circle cx="148" cy="352" r="12" fill="#f59e0b"/>
+  <circle cx="364" cy="352" r="12" fill="#f59e0b"/>
+  <!-- Ground line -->
+  <rect x="108" y="410" width="296" height="26" rx="13" fill="white" opacity="0.6"/>
+</svg>
